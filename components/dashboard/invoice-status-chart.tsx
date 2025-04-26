@@ -1,15 +1,88 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "@/components/ui/chart"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Bar } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
 
-const data = [
-  { name: "Paid", value: 65, color: "#4ade80" },
-  { name: "Pending", value: 25, color: "#facc15" },
-  { name: "Overdue", value: 10, color: "#f87171" },
-]
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
-export function InvoiceStatusChart() {
+const options = {
+  indexAxis: "y" as const, // horizontal bar
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false,
+    },
+    tooltip: {
+      callbacks: {
+        label: function (context: any) {
+          return `${context.raw}%`;
+        },
+      },
+    },
+  },
+  scales: {
+    x: {
+      min: 0,
+      max: 100,
+      ticks: {
+        callback: function (value: any) {
+          return `${value}%`;
+        },
+        color: "#6B7280",
+      },
+      grid: {
+        color: "#E5E7EB",
+      },
+    },
+    y: {
+      ticks: {
+        color: "#6B7280",
+      },
+      grid: {
+        display: false,
+      },
+    },
+  },
+};
+
+interface InvoiceStatusChartProps {
+  data: {
+    Paid: number;
+    Pending: number;
+    Overdue: number;
+  };
+}
+
+export function InvoiceStatusChart({ data }: InvoiceStatusChartProps) {
+  const chartData = {
+    labels: ["Paid", "Pending", "Overdue"],
+    datasets: [
+      {
+        label: "Invoice Status",
+        data: [data.Paid, data.Pending, data.Overdue],
+        backgroundColor: ["#4ade80", "#facc15", "#f87171"], // Green, Yellow, Red
+        borderWidth: 1,
+        borderRadius: 8,
+        barThickness: 40,
+      },
+    ],
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -18,28 +91,9 @@ export function InvoiceStatusChart() {
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={data}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={5}
-                dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-              >
-                {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => [`${value}%`, "Percentage"]} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          <Bar data={chartData} options={options} />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

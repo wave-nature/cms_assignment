@@ -82,7 +82,7 @@ export const POST = async (request: NextRequest) => {
   }
   const { fullName, email, phone, status, address } = value;
 
-  // Check if the coupon already exists
+  // Check if the customer already exists
   const customer = await prisma.customer.findFirst({
     where: {
       email,
@@ -94,7 +94,7 @@ export const POST = async (request: NextRequest) => {
     });
   }
 
-  // Create the coupon
+  // Create the customer
   let data: any = {
     data: {
       fullName,
@@ -106,10 +106,10 @@ export const POST = async (request: NextRequest) => {
     },
   };
 
-  const newCoupon = await prisma.customer.create(data);
+  const newCustomer = await prisma.customer.create(data);
 
   return createResponse({
     message: messages.SUCCESS,
-    payload: { coupon: newCoupon },
+    payload: { customer: newCustomer },
   });
 };

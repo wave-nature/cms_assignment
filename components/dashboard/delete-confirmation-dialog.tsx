@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,29 +10,28 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Trash } from "lucide-react"
+} from "@/components/ui/dialog";
+import { Trash } from "lucide-react";
 
 interface DeleteConfirmationDialogProps {
-  title: string
-  description: string
-  onDelete: () => void
+  title: string;
+  description: string;
+  onDelete: () => void;
+  loading?: boolean;
 }
 
-export function DeleteConfirmationDialog({ title, description, onDelete }: DeleteConfirmationDialogProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [open, setOpen] = useState(false)
+export function DeleteConfirmationDialog({
+  title,
+  description,
+  onDelete,
+  loading: isLoading,
+}: DeleteConfirmationDialogProps) {
+  const [open, setOpen] = useState(false);
 
   const handleDelete = async () => {
-    setIsLoading(true)
-
-    // In a real implementation, you would call your API here
-    setTimeout(() => {
-      setIsLoading(false)
-      setOpen(false)
-      onDelete()
-    }, 1000)
-  }
+    await onDelete();
+    setOpen(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -51,11 +50,15 @@ export function DeleteConfirmationDialog({ title, description, onDelete }: Delet
           <Button variant="outline" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleDelete} disabled={isLoading}>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isLoading}
+          >
             {isLoading ? "Deleting..." : "Delete"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

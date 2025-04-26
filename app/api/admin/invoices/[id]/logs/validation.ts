@@ -6,8 +6,4 @@ const get = Joi.object({
   search: Joi.string().optional().allow(""),
 });
 
-const post = Joi.object({
-  code: Joi.string().required(),
-});
-
-export default { get, post };
+export default { get };

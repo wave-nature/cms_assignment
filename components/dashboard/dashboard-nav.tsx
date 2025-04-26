@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { BarChart3, CreditCard, Home, Settings, Users } from "lucide-react"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { BarChart3, CreditCard, Home, Settings, Users } from "lucide-react";
 
 interface DashboardNavProps {
-  className?: string
+  className?: string;
 }
 
 export function DashboardNav({ className }: DashboardNavProps) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const navItems = [
     {
@@ -29,17 +29,13 @@ export function DashboardNav({ className }: DashboardNavProps) {
       href: "/dashboard/invoices",
       icon: CreditCard,
     },
-    {
-      title: "Reports",
-      href: "/dashboard/reports",
-      icon: BarChart3,
-    },
+    
     {
       title: "Settings",
       href: "/dashboard/settings",
       icon: Settings,
     },
-  ]
+  ];
 
   return (
     <nav className={cn("flex flex-col space-y-1 p-4", className)}>
@@ -47,7 +43,12 @@ export function DashboardNav({ className }: DashboardNavProps) {
         <Button
           key={item.href}
           variant={pathname === item.href ? "secondary" : "ghost"}
-          className={cn("justify-start", pathname === item.href ? "bg-muted" : "hover:bg-transparent hover:underline")}
+          className={cn(
+            "justify-start",
+            pathname === item.href
+              ? "bg-muted"
+              : "hover:bg-transparent hover:underline"
+          )}
           asChild
         >
           <Link href={item.href}>
@@ -57,5 +58,5 @@ export function DashboardNav({ className }: DashboardNavProps) {
         </Button>
       ))}
     </nav>
-  )
+  );
 }

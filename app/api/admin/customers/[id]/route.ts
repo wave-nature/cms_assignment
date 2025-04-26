@@ -55,7 +55,7 @@ export const PATCH = async (
   const id = (await params).id;
   const { fullName, email, phone, status, address } = value;
 
-  // Check if the coupon already exists
+  // Check if the customer already exists
   const customer = await prisma.customer.findFirst({
     where: {
       id,
@@ -67,7 +67,7 @@ export const PATCH = async (
     });
   }
 
-  // Create the coupon
+  // Update the customer
   let data: any = {
     fullName,
     email,

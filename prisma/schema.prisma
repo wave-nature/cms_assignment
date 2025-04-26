@@ -63,6 +63,7 @@ model Invoice {
   amount            Float         @default(0.0)
   status            InvoiceStatus @default(Pending)
   dueDate           DateTime      @default(now())
+  invoiceDate       DateTime      @default(now())
   externalInvoiceId Int           @unique @default(autoincrement())
   description       String?
   owner             Customer      @relation(fields: [ownerId], references: [id])

@@ -1,95 +1,149 @@
 import prisma from "@prisma/index";
 import { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-import { convertURLSearchParamsToObject } from "@/utils/helpers";
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
 import validation from "./validation";
 
-export const GET = async (request: NextRequest) => {
-  // Validate
-  const searchParams = request.nextUrl.searchParams;
-  const { error, value } = validation.get.validate(
-    convertURLSearchParamsToObject(searchParams)
-  );
-  if (error) {
+export const GET = async (
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const token = await getToken({ req: request });
+
+  if (!token) {
     return createError({
-      message: messages.VALIDATION_ERROR,
-      payload: error.details,
+      message: messages.UNAUTHORIZED,
     });
   }
-  const { page, pageSize, search } = value;
 
-  // Get all customers
-  const customers = await prisma.customer.findMany({
-    skip: (page - 1) * pageSize,
-    take: pageSize,
+  // Validate
+  const id = (await params).id;
+  // Get invoice
+  const invoice = await prisma.invoice.findFirst({
     where: {
-      email: {
-        contains: search,
-        mode: "insensitive",
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
+      id,
     },
   });
 
-  // Get pagination data
-  const totalCoupons = await prisma.customer.count({
-    where: {
-      email: {
-        contains: search,
-        mode: "insensitive",
-      },
-    },
-  });
-  const Pages = Math.ceil(totalCoupons / pageSize);
+  if (!invoice) {
+    return createError({
+      message: messages.NOT_FOUND,
+    });
+  }
 
   return createResponse({
     message: messages.SUCCESS,
-    payload: { customers },
-    pagination: {
-      page,
-      pageSize,
-      Total: totalCoupons,
-      Pages,
-    },
+    payload: { invoice },
   });
 };
 
-export const POST = async (request: Request) => {
+export const PATCH = async (
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const token = await getToken({ req: request });
+
+  if (!token?.sub) {
+    return createError({
+      message: messages.UNAUTHORIZED,
+    });
+  }
+
   // Validate the request body against the schema
-  const { error, value } = validation.post.validate(await request.json());
+  const { error, value } = validation.patch.validate(await request.json());
   if (error) {
     return createError({
       message: messages.VALIDATION_ERROR,
       payload: error.details,
     });
   }
-  const { email } = value;
+  const id = (await params).id;
+  const { amount, status, dueDate, invoiceDate, description, fieldChanged } =
+    value;
 
-  // Check if the coupon already exists
-  const customer = await prisma.customer.findFirst({
+  // Check if the invoice already exists
+  const invoice = await prisma.invoice.findFirst({
     where: {
-      email,
+      id,
     },
   });
-  if (customer) {
+  if (!invoice) {
     return createError({
-      message: messages.CUSTOMER_ALREADY_EXISTS,
+      message: messages.NOT_FOUND,
     });
   }
 
-  // Create the coupon
+  // update the invoice
   let data: any = {
-    data: {},
+    amount,
+    status,
+    dueDate,
+    invoiceDate,
+    description,
+    ownerId: invoice.ownerId,
   };
 
-  const newCoupon = await prisma.customer.create(data);
+  const updatedInvoice = await prisma.invoice.update({
+    where: {
+      id,
+    },
+    data,
+  });
+
+  if (fieldChanged) {
+    const log = await prisma.invoiceLogs.create({
+      data: {
+        invoiceId: id,
+        fieldChanged: fieldChanged,
+        adminId: token?.sub,
+        changedAt: new Date(),
+        action: "Update",
+      },
+    });
+
+    console.log("log", log);
+  }
 
   return createResponse({
     message: messages.SUCCESS,
-    payload: { coupon: newCoupon },
+    payload: { invoice: updatedInvoice },
+  });
+};
+
+export const DELETE = async (
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) => {
+  const token = await getToken({ req: request });
+  const id = (await params).id;
+
+  if (!token) {
+    return createError({
+      message: messages.UNAUTHORIZED,
+    });
+  }
+
+  // Get all invoice
+  const invoice = await prisma.invoice.findFirst({
+    where: { id },
+  });
+
+  if (!invoice) {
+    return createError({
+      message: messages.NOT_FOUND,
+    });
+  }
+
+  // delete all logs related to this invoice
+  await prisma.invoiceLogs.deleteMany({
+    where: { invoiceId: id },
+  });
+  await prisma.invoice.delete({ where: { id } });
+
+  return createResponse({
+    message: messages.SUCCESS,
+    payload: {},
   });
 };

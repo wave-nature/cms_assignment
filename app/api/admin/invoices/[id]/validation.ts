@@ -1,13 +1,14 @@
+import { InvoiceStatus } from "@/lib/generated/prisma";
 import Joi from "joi";
 
-const get = Joi.object({
-  page: Joi.number().integer().min(1).default(1),
-  pageSize: Joi.number().integer().min(1).default(10),
-  search: Joi.string().optional().allow(""),
+const patch = Joi.object({
+  amount: Joi.number().optional(),
+  status: Joi.string()
+    .valid(InvoiceStatus.Pending, InvoiceStatus.Overdue, InvoiceStatus.Paid)
+    .optional(),
+  dueDate: Joi.date().optional(),
+  invoiceDate: Joi.date().optional(),
+  description: Joi.string().optional(),
+  fieldChanged: Joi.object().optional(),
 });
-
-const post = Joi.object({
-  code: Joi.string().required(),
-});
-
-export default { get, post };
+export default { patch };

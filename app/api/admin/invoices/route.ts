@@ -18,41 +18,47 @@ export const GET = async (request: NextRequest) => {
       payload: error.details,
     });
   }
-  const { page, pageSize, search } = value;
-
-  // Get all customers
-  const customers = await prisma.customer.findMany({
+  const { page, pageSize, customerId } = value;
+  let query: any = {
     skip: (page - 1) * pageSize,
     take: pageSize,
-    where: {
-      email: {
-        contains: search,
-        mode: "insensitive",
-      },
-    },
     orderBy: {
       createdAt: "desc",
     },
-  });
+    include: {
+      owner: true,
+    },
+  };
+  let countQuery = {};
+  if (customerId) {
+    query = {
+      ...query,
+      where: {
+        ownerId: customerId,
+      },
+    };
+
+    countQuery = {
+      where: {
+        ownerId: customerId,
+      },
+    };
+  }
+
+  // Get all invoices
+  const invoices = await prisma.invoice.findMany(query);
 
   // Get pagination data
-  const totalCoupons = await prisma.customer.count({
-    where: {
-      email: {
-        contains: search,
-        mode: "insensitive",
-      },
-    },
-  });
-  const Pages = Math.ceil(totalCoupons / pageSize);
+  const totalInvoices = await prisma.invoice.count(countQuery);
+  const Pages = Math.ceil(totalInvoices / pageSize);
 
   return createResponse({
     message: messages.SUCCESS,
-    payload: { customers },
+    payload: { invoices },
     pagination: {
       page,
       pageSize,
-      Total: totalCoupons,
+      Total: totalInvoices,
       Pages,
     },
   });
@@ -67,29 +73,24 @@ export const POST = async (request: Request) => {
       payload: error.details,
     });
   }
-  const { email } = value;
+  const { amount, status, dueDate, invoiceDate, description, ownerId } = value;
 
-  // Check if the coupon already exists
-  const customer = await prisma.customer.findFirst({
-    where: {
-      email,
-    },
-  });
-  if (customer) {
-    return createError({
-      message: messages.CUSTOMER_ALREADY_EXISTS,
-    });
-  }
-
-  // Create the coupon
+  // Create invoice
   let data: any = {
-    data: {},
+    data: {
+      amount,
+      status,
+      dueDate,
+      invoiceDate,
+      description,
+      ownerId,
+    },
   };
 
-  const newCoupon = await prisma.customer.create(data);
+  const newInvoice = await prisma.invoice.create(data);
 
   return createResponse({
     message: messages.SUCCESS,
-    payload: { coupon: newCoupon },
+    payload: { invoice: newInvoice },
   });
 };

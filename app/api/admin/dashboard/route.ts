@@ -1,95 +1,99 @@
 import prisma from "@prisma/index";
 import { NextRequest } from "next/server";
 
-import { convertURLSearchParamsToObject } from "@/utils/helpers";
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
-import validation from "./validation";
 
 export const GET = async (request: NextRequest) => {
-  // Validate
-  const searchParams = request.nextUrl.searchParams;
-  const { error, value } = validation.get.validate(
-    convertURLSearchParamsToObject(searchParams)
-  );
-  if (error) {
-    return createError({
-      message: messages.VALIDATION_ERROR,
-      payload: error.details,
-    });
-  }
-  const { page, pageSize, search } = value;
+  try {
+    const [
+      totalCustomers,
+      totalInvoices,
+      revenueData,
+      statusCounts,
+      overdueInvoices,
+    ] = await Promise.all([
+      prisma.customer.count(),
+      prisma.invoice.count(),
 
-  // Get all customers
-  const customers = await prisma.customer.findMany({
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    where: {
-      email: {
-        contains: search,
-        mode: "insensitive",
+      // Revenue per month
+      prisma.invoice.groupBy({
+        by: ["invoiceDate"],
+        _sum: { amount: true },
+      }),
+
+      // Count per status
+      prisma.invoice.groupBy({
+        by: ["status"],
+        _count: { _all: true },
+      }),
+
+      // Overdue invoices (count)
+      prisma.invoice.count({
+        where: { status: "Overdue" },
+      }),
+    ]);
+
+    // Format revenueData: month wise
+    const monthlyRevenueMap: Record<string, number> = {};
+    for (const item of revenueData) {
+      const month = item.invoiceDate.toLocaleString("default", {
+        month: "short",
+      }); // Jan, Feb etc.
+      monthlyRevenueMap[month] =
+        (monthlyRevenueMap[month] || 0) + (item._sum.amount || 0);
+    }
+
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const monthlyRevenue = months.map((month) => ({
+      name: month,
+      revenue: monthlyRevenueMap[month] || 0,
+    }));
+
+    // Status counts
+    const statusMap: Record<string, number> = {
+      Paid: 0,
+      Pending: 0,
+      Overdue: 0,
+    };
+    for (const item of statusCounts) {
+      statusMap[item.status] = item._count._all;
+    }
+
+    // Calculate total revenue
+    const totalRevenue = revenueData.reduce(
+      (sum, item) => sum + (item._sum.amount || 0),
+      0
+    );
+
+    return createResponse({
+      message: messages.SUCCESS,
+      payload: {
+        customers: totalCustomers,
+        invoices: totalInvoices,
+        totalRevenue,
+        overdueInvoices,
+        monthlyRevenue, // For Area chart
+        invoiceStatus: statusMap, // For Bar chart
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-
-  // Get pagination data
-  const totalCoupons = await prisma.customer.count({
-    where: {
-      email: {
-        contains: search,
-        mode: "insensitive",
-      },
-    },
-  });
-  const Pages = Math.ceil(totalCoupons / pageSize);
-
-  return createResponse({
-    message: messages.SUCCESS,
-    payload: { customers },
-    pagination: {
-      page,
-      pageSize,
-      Total: totalCoupons,
-      Pages,
-    },
-  });
-};
-
-export const POST = async (request: Request) => {
-  // Validate the request body against the schema
-  const { error, value } = validation.post.validate(await request.json());
-  if (error) {
+    });
+  } catch (error) {
+    console.error(error);
     return createError({
-      message: messages.VALIDATION_ERROR,
-      payload: error.details,
+      message: messages.ERROR,
     });
   }
-  const { email } = value;
-
-  // Check if the coupon already exists
-  const customer = await prisma.customer.findFirst({
-    where: {
-      email,
-    },
-  });
-  if (customer) {
-    return createError({
-      message: messages.CUSTOMER_ALREADY_EXISTS,
-    });
-  }
-
-  // Create the coupon
-  let data: any = {
-    data: {},
-  };
-
-  const newCoupon = await prisma.customer.create(data);
-
-  return createResponse({
-    message: messages.SUCCESS,
-    payload: { coupon: newCoupon },
-  });
 };

@@ -1,68 +1,112 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Line } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
   Tooltip,
-  XAxis,
-  YAxis,
-} from "@/components/ui/chart"
+  Legend,
+} from "chart.js";
 
-const data = [
-  { name: "Jan", revenue: 4000 },
-  { name: "Feb", revenue: 3000 },
-  { name: "Mar", revenue: 5000 },
-  { name: "Apr", revenue: 4000 },
-  { name: "May", revenue: 7000 },
-  { name: "Jun", revenue: 6000 },
-  { name: "Jul", revenue: 8000 },
-  { name: "Aug", revenue: 9000 },
-  { name: "Sep", revenue: 8500 },
-  { name: "Oct", revenue: 10000 },
-  { name: "Nov", revenue: 11000 },
-  { name: "Dec", revenue: 12000 },
-]
+ChartJS.register(
+  LineElement,
+  PointElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend
+);
 
-export function RevenueChart() {
+const options = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: true,
+      labels: {
+        color: "#6B7280", // text-gray-500
+      },
+    },
+    tooltip: {
+      callbacks: {
+        label: function (context: any) {
+          const value = context.raw;
+          return `$${value.toLocaleString()}`;
+        },
+      },
+    },
+  },
+  scales: {
+    x: {
+      ticks: {
+        color: "#6B7280",
+      },
+      grid: {
+        display: false,
+      },
+    },
+    y: {
+      ticks: {
+        color: "#6B7280",
+        callback: function (value: any) {
+          return `$${value}`;
+        },
+      },
+      grid: {
+        color: "#E5E7EB", // light gray grid
+      },
+    },
+  },
+};
+
+interface RevenueChartProps {
+  data: { name: string; revenue: number }[];
+  totalRevenue: number;
+}
+
+export function RevenueChart({ data, totalRevenue }: RevenueChartProps) {
+  // Convert incoming data into chart.js format
+  const chartData = {
+    labels: data.map((item) => item.name),
+    datasets: [
+      {
+        label: "Revenue",
+        data: data.map((item) => item.revenue),
+        fill: true,
+        borderColor: "#6366F1", // Indigo-500
+        backgroundColor: "rgba(99, 102, 241, 0.2)", // Light Indigo background
+        tension: 0.4, // smooth curves
+        pointBackgroundColor: "#6366F1",
+        pointBorderColor: "#fff",
+        pointHoverBackgroundColor: "#fff",
+        pointHoverBorderColor: "#6366F1",
+      },
+    ],
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Revenue Trends</CardTitle>
-        <CardDescription>Monthly revenue for the current year</CardDescription>
+        <CardDescription>
+          Total Revenue: ${totalRevenue.toLocaleString()}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={data}
-              margin={{
-                top: 20,
-                right: 30,
-                left: 0,
-                bottom: 0,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip formatter={(value) => [`$${value}`, "Revenue"]} />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="revenue"
-                stroke="#8884d8"
-                fill="#8884d8"
-                fillOpacity={0.3}
-                name="Revenue"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Line data={chartData} options={options} />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

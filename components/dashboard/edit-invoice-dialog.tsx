@@ -1,64 +1,136 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { CalendarIcon, Edit } from "lucide-react"
-import { format } from "date-fns"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon, Edit } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 interface EditInvoiceDialogProps {
   invoice: {
-    id: string
-    amount: number
-    status: string
-    date: string
-    dueDate: string
-    description: string
-    externalId: string
-  }
+    id: string;
+    amount: number;
+    status: string;
+    invoiceDate: string;
+    dueDate: string;
+    description: string;
+    externalId: string;
+    ownerId: string;
+  };
+  refresh: boolean;
+  setRefresh: (refresh: boolean) => void;
 }
 
-export function EditInvoiceDialog({ invoice }: EditInvoiceDialogProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const [date, setDate] = useState<Date>(new Date(invoice.date))
-  const [dueDate, setDueDate] = useState<Date>(new Date(invoice.dueDate))
-  const [formData, setFormData] = useState({
-    amount: invoice.amount.toString(),
-    status: invoice.status,
-    description: invoice.description,
-    externalId: invoice.externalId,
-  })
+interface FormValues {
+  amount: string;
+  status: string;
+  description: string;
+  invoiceDate: Date;
+  dueDate: Date;
+}
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+export function EditInvoiceDialog({
+  invoice,
+  refresh,
+  setRefresh,
+}: EditInvoiceDialogProps) {
+  const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    defaultValues: {
+      amount: invoice.amount.toString(),
+      status: invoice.status,
+      description: invoice.description,
+      invoiceDate: new Date(invoice.invoiceDate),
+      dueDate: new Date(invoice.dueDate),
+    },
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+  const invoiceDate = watch("invoiceDate");
+  const dueDate = watch("dueDate");
 
-    // In a real implementation, you would call your API here
-    setTimeout(() => {
-      setIsLoading(false)
-      setOpen(false)
-      // You would typically refresh the data here
-    }, 1000)
-  }
+  const onSubmit = async (data: FormValues) => {
+    setIsLoading(true);
+    const toastId = toast.loading("Updating invoice...");
+    try {
+      const { amount, status, description, invoiceDate, dueDate } = data;
+      const newValues: any = {
+        amount,
+        status,
+        description,
+        invoiceDate: invoiceDate.toISOString(),
+        dueDate: dueDate.toISOString(),
+      };
+      const fieldChanged = Object.keys(newValues).reduce((acc, key) => {
+        const newValue = newValues[key];
+        // @ts-ignore
+        const prevValue = invoice[key];
+
+        if (prevValue != newValue) {
+          acc[key] = { prevValue, newValue };
+        }
+
+        return acc;
+      }, {} as Record<string, { prevValue: any; newValue: any }>);
+      const res = await axios.patch(`/api/admin/invoices/${invoice.id}`, {
+        amount: parseFloat(amount),
+        status,
+        description,
+        invoiceDate,
+        dueDate,
+        fieldChanged,
+      });
+
+      if (res.status === 200) {
+        toast.dismiss(toastId);
+        toast.success("Invoice updated successfully");
+        setRefresh(!refresh);
+      }
+    } catch (error) {
+      toast.dismiss(toastId);
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data.message || "Something went wrong");
+      } else {
+        toast.error("Something went wrong");
+      }
+    } finally {
+      setIsLoading(false);
+      setOpen(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -72,35 +144,37 @@ export function EditInvoiceDialog({ invoice }: EditInvoiceDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit Invoice</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="amount">Amount</Label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2">$</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                  $
+                </span>
                 <Input
                   id="amount"
-                  name="amount"
                   type="number"
                   step="0.01"
-                  className="pl-7"
                   placeholder="0.00"
-                  value={formData.amount}
-                  onChange={handleChange}
-                  required
+                  className="pl-7"
+                  {...register("amount", { required: true })}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+              <Select
+                value={watch("status")}
+                onValueChange={(value) => setValue("status", value)}
+              >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
+                  <SelectItem value="Paid">Paid</SelectItem>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Overdue">Overdue</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -110,14 +184,22 @@ export function EditInvoiceDialog({ invoice }: EditInvoiceDialogProps) {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !date && "text-muted-foreground")}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !invoiceDate && "text-muted-foreground"
+                    )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    {invoiceDate ? format(invoiceDate, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
-                  <Calendar mode="single" selected={date} onSelect={(date) => date && setDate(date)} initialFocus />
+                  <Calendar
+                    mode="single"
+                    selected={invoiceDate}
+                    onSelect={(date) => date && setValue("invoiceDate", date)}
+                    initialFocus
+                  />
                 </PopoverContent>
               </Popover>
             </div>
@@ -127,46 +209,40 @@ export function EditInvoiceDialog({ invoice }: EditInvoiceDialogProps) {
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className={cn("w-full justify-start text-left font-normal", !dueDate && "text-muted-foreground")}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !dueDate && "text-muted-foreground"
+                    )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dueDate ? format(dueDate, "PPP") : <span>Pick a date</span>}
+                    {dueDate ? format(dueDate, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
                     selected={dueDate}
-                    onSelect={(date) => date && setDueDate(date)}
+                    onSelect={(date) => date && setValue("dueDate", date)}
                     initialFocus
                   />
                 </PopoverContent>
               </Popover>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="externalId">External Invoice ID</Label>
-              <Input
-                id="externalId"
-                name="externalId"
-                placeholder="EXT-INV-001"
-                value={formData.externalId}
-                onChange={handleChange}
-              />
-              <p className="text-xs text-muted-foreground">Identifier for invoices from external systems</p>
             </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              name="description"
               placeholder="Invoice description or notes"
-              value={formData.description}
-              onChange={handleChange}
+              {...register("description")}
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
@@ -176,5 +252,5 @@ export function EditInvoiceDialog({ invoice }: EditInvoiceDialogProps) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

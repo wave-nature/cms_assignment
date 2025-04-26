@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   type ColumnDef,
   flexRender,
@@ -12,10 +12,10 @@ import {
   getSortedRowModel,
   type ColumnFiltersState,
   getFilteredRowModel,
-} from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+} from "@tanstack/react-table";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,83 +23,82 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-// Sample data
-const data: Invoice[] = [
-  {
-    id: "INV-001",
-    amount: 1250.0,
-    status: "paid",
-    date: "2023-03-15",
-    dueDate: "2023-04-15",
-    externalId: "EXT-INV-001",
-  },
-  {
-    id: "INV-002",
-    amount: 2340.0,
-    status: "pending",
-    date: "2023-04-01",
-    dueDate: "2023-05-01",
-    externalId: "EXT-INV-002",
-  },
-  {
-    id: "INV-003",
-    amount: 890.5,
-    status: "overdue",
-    date: "2023-02-15",
-    dueDate: "2023-03-15",
-    externalId: "EXT-INV-003",
-  },
-  {
-    id: "INV-004",
-    amount: 1500.0,
-    status: "paid",
-    date: "2023-01-10",
-    dueDate: "2023-02-10",
-    externalId: "EXT-INV-004",
-  },
-  {
-    id: "INV-005",
-    amount: 3200.0,
-    status: "pending",
-    date: "2023-05-01",
-    dueDate: "2023-06-01",
-    externalId: "EXT-INV-005",
-  },
-]
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import axios from "axios";
 
 type Invoice = {
-  id: string
-  amount: number
-  status: "paid" | "pending" | "overdue"
-  date: string
-  dueDate: string
-  externalId: string
-}
+  id: string;
+  amount: number;
+  status: "Paid" | "Pending" | "Overdue";
+  dueDate: string;
+  invoiceDate: string;
+  externalInvoiceId: string;
+};
 
 interface CustomerInvoicesProps {
-  customerId: string
+  customerId: string;
 }
 
 export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [data, setData] = useState<Invoice[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalInvoices, setTotalInvoices] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch invoices data from API
+  async function fetchInvoices() {
+    setLoading(true);
+    try {
+      const res = await axios.get("/api/admin/invoices", {
+        params: {
+          page,
+          pageSize,
+          customerId,
+        },
+      });
+
+      const { payload, pagination } = res.data;
+      setData(payload.invoices || []);
+      setTotalInvoices(pagination.Total || 0);
+    } catch (error) {
+      console.error("Failed to fetch invoices:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Fetch invoices whenever page or pageSize changes
+  useEffect(() => {
+    fetchInvoices();
+  }, [page, pageSize]);
 
   const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "id",
       header: ({ column }) => {
         return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Invoice ID
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => (
         <div>
@@ -116,63 +115,117 @@ export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
       accessorKey: "amount",
       header: ({ column }) => {
         return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Amount
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
       },
       cell: ({ row }) => {
-        const amount = Number.parseFloat(row.getValue("amount"))
+        const amount = Number.parseFloat(row.getValue("amount"));
         const formatted = new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
-        }).format(amount)
-        return <div className="font-medium">{formatted}</div>
+        }).format(amount);
+        return <div className="font-medium">{formatted}</div>;
       },
     },
     {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("status") as string
+        const status = row.getValue("status") as string;
         return (
-          <Badge variant={status === "paid" ? "default" : status === "pending" ? "secondary" : "destructive"}>
+          <Badge
+            variant={
+              status === "paid"
+                ? "default"
+                : status === "pending"
+                ? "secondary"
+                : "destructive"
+            }
+          >
             {status}
           </Badge>
-        )
+        );
       },
     },
     {
-      accessorKey: "date",
+      accessorKey: "invoiceDate",
       header: ({ column }) => {
         return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Date
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
+      },
+      cell: ({ row }) => {
+        const invoiceDate = new Date(row.getValue("invoiceDate"));
+        const formattedDate = new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          hour12: true,
+        }).format(invoiceDate);
+        return <div>{formattedDate}</div>;
       },
     },
     {
       accessorKey: "dueDate",
       header: ({ column }) => {
         return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
             Due Date
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
-        )
+        );
+      },
+      cell: ({ row }) => {
+        const dueDate = new Date(row.getValue("dueDate"));
+        const formattedDate = new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          second: "numeric",
+          hour12: true,
+        }).format(dueDate);
+        return <div>{formattedDate}</div>;
       },
     },
     {
-      accessorKey: "externalId",
+      accessorKey: "externalInvoiceId",
       header: "External ID",
+      cell: ({ row }) => {
+        const externalInvoiceId: any = row.getValue("externalInvoiceId");
+        return (
+          <>
+            {"INV_" +
+              (parseInt(externalInvoiceId) < 10
+                ? "0" + externalInvoiceId
+                : externalInvoiceId)}
+          </>
+        );
+      },
     },
     {
       id: "actions",
       cell: ({ row }) => {
-        const invoice = row.original
+        const invoice = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -183,38 +236,52 @@ export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(invoice.id)}>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(invoice.id)}
+              >
                 Copy invoice ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Link href={`/dashboard/customer/${customerId}/invoice/${invoice.id}`}>View invoice</Link>
+                <Link
+                  href={`/dashboard/customer/${customerId}/invoice/${invoice.id}`}
+                >
+                  View invoice
+                </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href={`/dashboard/customer/${customerId}/invoice/${invoice.id}/edit`}>Edit invoice</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">Delete invoice</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
     },
-  ]
+  ];
 
   const table = useReactTable({
     data,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
+    manualPagination: true,
+    pageCount: Math.ceil(totalInvoices / pageSize),
+    state: {
+      sorting,
+      columnFilters,
+      pagination: {
+        pageIndex: page - 1,
+        pageSize: pageSize,
+      },
+    },
+    onPaginationChange: (updater) => {
+      const newPagination =
+        typeof updater === "function"
+          ? updater({ pageIndex: page - 1, pageSize })
+          : updater;
+      setPage(newPagination.pageIndex + 1);
+      setPageSize(newPagination.pageSize);
+    },
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    state: {
-      sorting,
-      columnFilters,
-    },
-  })
+  });
 
   return (
     <Card>
@@ -226,7 +293,9 @@ export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
           <Input
             placeholder="Filter invoices..."
             value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
-            onChange={(event) => table.getColumn("id")?.setFilterValue(event.target.value)}
+            onChange={(event) =>
+              table.getColumn("id")?.setFilterValue(event.target.value)
+            }
             className="max-w-sm"
           />
         </div>
@@ -238,9 +307,14 @@ export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
                   {headerGroup.headers.map((header) => {
                     return (
                       <TableHead key={header.id}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                       </TableHead>
-                    )
+                    );
                   })}
                 </TableRow>
               ))}
@@ -248,15 +322,26 @@ export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                  >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
                     No results.
                   </TableCell>
                 </TableRow>
@@ -266,23 +351,30 @@ export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
         </div>
         <div className="flex items-center justify-end space-x-2 py-4">
           <div className="flex-1 text-sm text-muted-foreground">
-            Showing {table.getRowModel().rows.length} of {data.length} invoices
+            {loading
+              ? "Loading..."
+              : `Showing ${data.length} of ${totalInvoices} invoices`}
           </div>
           <div className="space-x-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
             >
               Previous
             </Button>
-            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={page * pageSize >= totalInvoices}
+            >
               Next
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

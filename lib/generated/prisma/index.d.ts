@@ -3662,6 +3662,7 @@ export namespace Prisma {
     amount: number | null
     status: $Enums.InvoiceStatus | null
     dueDate: Date | null
+    invoiceDate: Date | null
     externalInvoiceId: number | null
     description: string | null
     ownerId: string | null
@@ -3674,6 +3675,7 @@ export namespace Prisma {
     amount: number | null
     status: $Enums.InvoiceStatus | null
     dueDate: Date | null
+    invoiceDate: Date | null
     externalInvoiceId: number | null
     description: string | null
     ownerId: string | null
@@ -3686,6 +3688,7 @@ export namespace Prisma {
     amount: number
     status: number
     dueDate: number
+    invoiceDate: number
     externalInvoiceId: number
     description: number
     ownerId: number
@@ -3710,6 +3713,7 @@ export namespace Prisma {
     amount?: true
     status?: true
     dueDate?: true
+    invoiceDate?: true
     externalInvoiceId?: true
     description?: true
     ownerId?: true
@@ -3722,6 +3726,7 @@ export namespace Prisma {
     amount?: true
     status?: true
     dueDate?: true
+    invoiceDate?: true
     externalInvoiceId?: true
     description?: true
     ownerId?: true
@@ -3734,6 +3739,7 @@ export namespace Prisma {
     amount?: true
     status?: true
     dueDate?: true
+    invoiceDate?: true
     externalInvoiceId?: true
     description?: true
     ownerId?: true
@@ -3833,6 +3839,7 @@ export namespace Prisma {
     amount: number
     status: $Enums.InvoiceStatus
     dueDate: Date
+    invoiceDate: Date
     externalInvoiceId: number
     description: string | null
     ownerId: string
@@ -3864,6 +3871,7 @@ export namespace Prisma {
     amount?: boolean
     status?: boolean
     dueDate?: boolean
+    invoiceDate?: boolean
     externalInvoiceId?: boolean
     description?: boolean
     ownerId?: boolean
@@ -3879,6 +3887,7 @@ export namespace Prisma {
     amount?: boolean
     status?: boolean
     dueDate?: boolean
+    invoiceDate?: boolean
     externalInvoiceId?: boolean
     description?: boolean
     ownerId?: boolean
@@ -3892,6 +3901,7 @@ export namespace Prisma {
     amount?: boolean
     status?: boolean
     dueDate?: boolean
+    invoiceDate?: boolean
     externalInvoiceId?: boolean
     description?: boolean
     ownerId?: boolean
@@ -3905,6 +3915,7 @@ export namespace Prisma {
     amount?: boolean
     status?: boolean
     dueDate?: boolean
+    invoiceDate?: boolean
     externalInvoiceId?: boolean
     description?: boolean
     ownerId?: boolean
@@ -3912,7 +3923,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type InvoiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "amount" | "status" | "dueDate" | "externalInvoiceId" | "description" | "ownerId" | "createdAt" | "updatedAt", ExtArgs["result"]["invoice"]>
+  export type InvoiceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "amount" | "status" | "dueDate" | "invoiceDate" | "externalInvoiceId" | "description" | "ownerId" | "createdAt" | "updatedAt", ExtArgs["result"]["invoice"]>
   export type InvoiceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     owner?: boolean | CustomerDefaultArgs<ExtArgs>
     InvoiceLogs?: boolean | Invoice$InvoiceLogsArgs<ExtArgs>
@@ -3936,6 +3947,7 @@ export namespace Prisma {
       amount: number
       status: $Enums.InvoiceStatus
       dueDate: Date
+      invoiceDate: Date
       externalInvoiceId: number
       description: string | null
       ownerId: string
@@ -4370,6 +4382,7 @@ export namespace Prisma {
     readonly amount: FieldRef<"Invoice", 'Float'>
     readonly status: FieldRef<"Invoice", 'InvoiceStatus'>
     readonly dueDate: FieldRef<"Invoice", 'DateTime'>
+    readonly invoiceDate: FieldRef<"Invoice", 'DateTime'>
     readonly externalInvoiceId: FieldRef<"Invoice", 'Int'>
     readonly description: FieldRef<"Invoice", 'String'>
     readonly ownerId: FieldRef<"Invoice", 'String'>
@@ -5939,6 +5952,7 @@ export namespace Prisma {
     amount: 'amount',
     status: 'status',
     dueDate: 'dueDate',
+    invoiceDate: 'invoiceDate',
     externalInvoiceId: 'externalInvoiceId',
     description: 'description',
     ownerId: 'ownerId',
@@ -6305,6 +6319,7 @@ export namespace Prisma {
     amount?: FloatFilter<"Invoice"> | number
     status?: EnumInvoiceStatusFilter<"Invoice"> | $Enums.InvoiceStatus
     dueDate?: DateTimeFilter<"Invoice"> | Date | string
+    invoiceDate?: DateTimeFilter<"Invoice"> | Date | string
     externalInvoiceId?: IntFilter<"Invoice"> | number
     description?: StringNullableFilter<"Invoice"> | string | null
     ownerId?: StringFilter<"Invoice"> | string
@@ -6319,6 +6334,7 @@ export namespace Prisma {
     amount?: SortOrder
     status?: SortOrder
     dueDate?: SortOrder
+    invoiceDate?: SortOrder
     externalInvoiceId?: SortOrder
     description?: SortOrderInput | SortOrder
     ownerId?: SortOrder
@@ -6337,6 +6353,7 @@ export namespace Prisma {
     amount?: FloatFilter<"Invoice"> | number
     status?: EnumInvoiceStatusFilter<"Invoice"> | $Enums.InvoiceStatus
     dueDate?: DateTimeFilter<"Invoice"> | Date | string
+    invoiceDate?: DateTimeFilter<"Invoice"> | Date | string
     description?: StringNullableFilter<"Invoice"> | string | null
     ownerId?: StringFilter<"Invoice"> | string
     createdAt?: DateTimeFilter<"Invoice"> | Date | string
@@ -6350,6 +6367,7 @@ export namespace Prisma {
     amount?: SortOrder
     status?: SortOrder
     dueDate?: SortOrder
+    invoiceDate?: SortOrder
     externalInvoiceId?: SortOrder
     description?: SortOrderInput | SortOrder
     ownerId?: SortOrder
@@ -6370,6 +6388,7 @@ export namespace Prisma {
     amount?: FloatWithAggregatesFilter<"Invoice"> | number
     status?: EnumInvoiceStatusWithAggregatesFilter<"Invoice"> | $Enums.InvoiceStatus
     dueDate?: DateTimeWithAggregatesFilter<"Invoice"> | Date | string
+    invoiceDate?: DateTimeWithAggregatesFilter<"Invoice"> | Date | string
     externalInvoiceId?: IntWithAggregatesFilter<"Invoice"> | number
     description?: StringNullableWithAggregatesFilter<"Invoice"> | string | null
     ownerId?: StringWithAggregatesFilter<"Invoice"> | string
@@ -6636,6 +6655,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     createdAt?: Date | string
@@ -6649,6 +6669,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     ownerId: string
@@ -6662,6 +6683,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6674,6 +6696,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     externalInvoiceId?: IntFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ownerId?: StringFieldUpdateOperationsInput | string
@@ -6687,6 +6710,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     ownerId: string
@@ -6699,6 +6723,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -6709,6 +6734,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     externalInvoiceId?: IntFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ownerId?: StringFieldUpdateOperationsInput | string
@@ -7079,6 +7105,7 @@ export namespace Prisma {
     amount?: SortOrder
     status?: SortOrder
     dueDate?: SortOrder
+    invoiceDate?: SortOrder
     externalInvoiceId?: SortOrder
     description?: SortOrder
     ownerId?: SortOrder
@@ -7096,6 +7123,7 @@ export namespace Prisma {
     amount?: SortOrder
     status?: SortOrder
     dueDate?: SortOrder
+    invoiceDate?: SortOrder
     externalInvoiceId?: SortOrder
     description?: SortOrder
     ownerId?: SortOrder
@@ -7108,6 +7136,7 @@ export namespace Prisma {
     amount?: SortOrder
     status?: SortOrder
     dueDate?: SortOrder
+    invoiceDate?: SortOrder
     externalInvoiceId?: SortOrder
     description?: SortOrder
     ownerId?: SortOrder
@@ -7909,6 +7938,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     createdAt?: Date | string
@@ -7921,6 +7951,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     createdAt?: Date | string
@@ -8001,6 +8032,7 @@ export namespace Prisma {
     amount?: FloatFilter<"Invoice"> | number
     status?: EnumInvoiceStatusFilter<"Invoice"> | $Enums.InvoiceStatus
     dueDate?: DateTimeFilter<"Invoice"> | Date | string
+    invoiceDate?: DateTimeFilter<"Invoice"> | Date | string
     externalInvoiceId?: IntFilter<"Invoice"> | number
     description?: StringNullableFilter<"Invoice"> | string | null
     ownerId?: StringFilter<"Invoice"> | string
@@ -8155,6 +8187,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     createdAt?: Date | string
@@ -8167,6 +8200,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     ownerId: string
@@ -8234,6 +8268,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8245,6 +8280,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     externalInvoiceId?: IntFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     ownerId?: StringFieldUpdateOperationsInput | string
@@ -8338,6 +8374,7 @@ export namespace Prisma {
     amount?: number
     status?: $Enums.InvoiceStatus
     dueDate?: Date | string
+    invoiceDate?: Date | string
     externalInvoiceId?: number
     description?: string | null
     createdAt?: Date | string
@@ -8349,6 +8386,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8360,6 +8398,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     externalInvoiceId?: IntFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8372,6 +8411,7 @@ export namespace Prisma {
     amount?: FloatFieldUpdateOperationsInput | number
     status?: EnumInvoiceStatusFieldUpdateOperationsInput | $Enums.InvoiceStatus
     dueDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    invoiceDate?: DateTimeFieldUpdateOperationsInput | Date | string
     externalInvoiceId?: IntFieldUpdateOperationsInput | number
     description?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
