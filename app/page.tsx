@@ -1,6 +1,12 @@
-import { redirect } from "next/navigation"
+"use client";
+
+import { useSession } from "next-auth/react";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  // In a real implementation, you would check if the user is authenticated
-  redirect("/login")
+  const { data: session } = useSession();
+  if (session) {
+    redirect("/dashboard");
+  }
+  redirect("/login");
 }

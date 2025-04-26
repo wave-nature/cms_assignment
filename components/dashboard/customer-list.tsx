@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import axios from "axios";
 import {
   type ColumnDef,
   flexRender,
@@ -11,11 +12,10 @@ import {
   type SortingState,
   getSortedRowModel,
   type ColumnFiltersState,
-  getFilteredRowModel,
-} from "@tanstack/react-table"
-import { ArrowUpDown, MoreHorizontal } from "lucide-react"
+} from "@tanstack/react-table";
+import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,98 +23,88 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-
-// Sample data
-const data: Customer[] = [
-  {
-    id: "1",
-    name: "Acme Inc.",
-    email: "info@acme.com",
-    phone: "(555) 123-4567",
-    status: "active",
-    invoiceCount: 12,
-    totalSpent: 24500,
-    externalId: "EXT-001",
-  },
-  {
-    id: "2",
-    name: "Globex Corporation",
-    email: "contact@globex.com",
-    phone: "(555) 234-5678",
-    status: "active",
-    invoiceCount: 8,
-    totalSpent: 18750,
-    externalId: "EXT-002",
-  },
-  {
-    id: "3",
-    name: "Soylent Corp",
-    email: "hello@soylent.com",
-    phone: "(555) 345-6789",
-    status: "inactive",
-    invoiceCount: 5,
-    totalSpent: 9200,
-    externalId: "EXT-003",
-  },
-  {
-    id: "4",
-    name: "Initech",
-    email: "support@initech.com",
-    phone: "(555) 456-7890",
-    status: "active",
-    invoiceCount: 15,
-    totalSpent: 32100,
-    externalId: "EXT-004",
-  },
-  {
-    id: "5",
-    name: "Umbrella Corporation",
-    email: "info@umbrella.com",
-    phone: "(555) 567-8901",
-    status: "active",
-    invoiceCount: 10,
-    totalSpent: 21300,
-    externalId: "EXT-005",
-  },
-]
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { DeleteDialog } from "@/components/ui/delete-dialog";
 
 type Customer = {
-  id: string
-  name: string
-  email: string
-  phone: string
-  status: "active" | "inactive"
-  invoiceCount: number
-  totalSpent: number
-  externalId: string
-}
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive";
+  invoiceCount: number;
+  totalSpent: number;
+  externalId: string;
+  Invoice: any[];
+  externalCustomerId: string;
+};
 
 export function CustomerList() {
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalCustomers, setTotalCustomers] = useState<number>(0);
+  const [emailSearch, setEmailSearch] = useState<string>("");
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get("/api/admin/customers", {
+        params: {
+          page,
+          pageSize,
+          email: emailSearch || undefined, // pass only if searched
+        },
+      });
+
+      const { payload, pagination } = res.data;
+      setCustomers(payload.customers || []);
+      setTotalCustomers(pagination.Total || 0);
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [page, pageSize, emailSearch]);
 
   const columns: ColumnDef<Customer>[] = [
     {
-      accessorKey: "name",
-      header: ({ column }) => {
-        return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
+      accessorKey: "fullName",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
-        <div>
-          <Link href={`/dashboard/customer/${row.original.id}`} className="font-medium hover:underline">
-            {row.getValue("name")}
-          </Link>
-        </div>
+        <Link
+          href={`/dashboard/customer/${row.original.id}`}
+          className="font-medium hover:underline"
+        >
+          {row.getValue("fullName")}
+        </Link>
       ),
     },
     {
@@ -129,104 +119,159 @@ export function CustomerList() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.getValue("status") as string
-        return <Badge variant={status === "active" ? "default" : "secondary"}>{status}</Badge>
+        const status = row.getValue("status") as string;
+        return (
+          <Badge variant={status ? "default" : "secondary"}>
+            {status ? "Active" : "Inactive"}
+          </Badge>
+        );
       },
     },
     {
       accessorKey: "invoiceCount",
-      header: ({ column }) => {
-        return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Invoices
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Invoices
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
-        return <div className="text-center">{row.getValue("invoiceCount")}</div>
+        const invoices = row.original.Invoice;
+
+        return <div className="text-center">{invoices?.length || 0}</div>;
       },
     },
     {
       accessorKey: "totalSpent",
-      header: ({ column }) => {
-        return (
-          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-            Total Spent
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Total Spent
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
-        const amount = Number.parseFloat(row.getValue("totalSpent"))
+        const invoices = row.original.Invoice;
+        const totalSpent = invoices.reduce((acc, invoice) => {
+          return acc + (invoice.total || 0);
+        }, 0);
+        const amount = totalSpent;
         const formatted = new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: "USD",
-        }).format(amount)
-        return <div className="text-right font-medium">{formatted}</div>
+        }).format(amount);
+        return <div className="text-center font-medium">{formatted}</div>;
       },
     },
     {
-      accessorKey: "externalId",
+      accessorKey: "externalCustomerId",
       header: "External ID",
+      cell: ({ row }) => (
+        <>
+          {(row.getValue("externalCustomerId")
+            ? "CID_" + row.getValue("externalCustomerId")
+            : "") || "N/A"}
+        </>
+      ),
     },
     {
       id: "actions",
       cell: ({ row }) => {
-        const customer = row.original
+        const customer = row.original;
+        const [open, setOpen] = useState(false);
+
         return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(customer.id)}>
-                Copy customer ID
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <Link href={`/dashboard/customer/${customer.id}`}>View customer</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href={`/dashboard/customer/${customer.id}/edit`}>Edit customer</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href={`/dashboard/customer/${customer.id}/invoice/new`}>Create invoice</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )
+          <>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() =>
+                    navigator.clipboard.writeText(
+                      "CID_" + customer.externalCustomerId
+                    )
+                  }
+                >
+                  Copy Customer ID
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Link href={`/dashboard/customer/${customer.id}`}>
+                    View Customer
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href={`/dashboard/customer/${customer.id}/edit`}>
+                    Edit Customer
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Link href={`/dashboard/customer/${customer.id}/invoice/new`}>
+                    Create Invoice
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => {
+                    // open delete dialog
+                    setOpen(true);
+                  }}
+                >
+                  Delete Customer
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DeleteDialog
+              open={open}
+              setOpen={setOpen}
+              text="This action can't be undone. Are you sure you want to delete this customer and his/her invoices too?"
+              onConfirm={() => {
+                try {
+                } catch (error) {}
+              }}
+            />
+            ;
+          </>
+        );
       },
     },
-  ]
+  ];
 
   const table = useReactTable({
-    data,
+    data: customers,
     columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
+    onSortingChange: setSorting,
     state: {
       sorting,
       columnFilters,
     },
-  })
+  });
 
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex items-center py-4">
           <Input
-            placeholder="Filter customers..."
-            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-            onChange={(event) => table.getColumn("name")?.setFilterValue(event.target.value)}
+            placeholder="Search by email..."
+            value={emailSearch}
+            onChange={(e) => {
+              setEmailSearch(e.target.value);
+              setPage(1); // Reset to first page on new search
+            }}
             className="max-w-sm"
           />
         </div>
@@ -235,54 +280,81 @@ export function CustomerList() {
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    )
-                  })}
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
                 </TableRow>
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center py-10"
+                  >
+                    Loading...
+                  </TableCell>
+                </TableRow>
+              ) : customers.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  <TableRow key={row.id}>
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
                     ))}
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    No results.
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center py-10"
+                  >
+                    No customers found.
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <div className="flex-1 text-sm text-muted-foreground">
-            Showing {table.getRowModel().rows.length} of {data.length} customers
+        <div className="flex items-center justify-between py-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {(page - 1) * pageSize + 1} to{" "}
+            {Math.min(page * pageSize, totalCustomers)} of {totalCustomers}{" "}
+            customers
           </div>
           <div className="space-x-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
+              onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+              disabled={page === 1}
             >
               Previous
             </Button>
-            <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((prev) => prev + 1)}
+              disabled={page * pageSize >= totalCustomers}
+            >
               Next
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

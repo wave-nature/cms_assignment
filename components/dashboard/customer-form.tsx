@@ -1,47 +1,68 @@
-"use client"
+"use client";
 
-import type React from "react"
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "react-hot-toast";
+import axios from "axios";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+type FormData = {
+  fullName?: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  status?: boolean;
+};
 
 export function CustomerForm() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    status: "active",
-    externalId: "",
-  })
+  const router = useRouter();
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<FormData>({
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      address: "",
+      status: true,
+    },
+  });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const formData = watch();
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const onSubmit = async (data: FormData) => {
+    const toastId = toast.loading("Saving customer...");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    try {
+      await axios.post("/api/admin/customers", data);
 
-    // In a real implementation, you would call your API here
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/dashboard/customers")
-    }, 1000)
-  }
+      toast.success("Customer saved successfully");
+      router.push("/dashboard/customers");
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to save customer";
+      toast.error(message);
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
 
   return (
     <Card>
@@ -49,45 +70,41 @@ export function CustomerForm() {
         <CardTitle>Customer Information</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                name="name"
                 placeholder="Acme Inc."
-                value={formData.name}
-                onChange={handleChange}
-                required
+                {...register("fullName")}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email*</Label>
               <Input
                 id="email"
-                name="email"
                 type="email"
                 placeholder="info@acme.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
+                {...register("email", { required: true })}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
-                name="phone"
                 placeholder="(555) 123-4567"
-                value={formData.phone}
-                onChange={handleChange}
-                required
+                {...register("phone")}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+              <Select
+                value={formData.status ? "active" : "inactive"}
+                onValueChange={(value) =>
+                  setValue("status", value === "active")
+                }
+              >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -97,39 +114,29 @@ export function CustomerForm() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="externalId">External ID</Label>
-              <Input
-                id="externalId"
-                name="externalId"
-                placeholder="EXT-001"
-                value={formData.externalId}
-                onChange={handleChange}
-              />
-              <p className="text-xs text-muted-foreground">Identifier for customers from external systems</p>
-            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
             <Textarea
               id="address"
-              name="address"
               placeholder="123 Main St, Anytown, USA"
-              value={formData.address}
-              onChange={handleChange}
-              required
+              {...register("address")}
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.push("/dashboard/customers")}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/dashboard/customers")}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Customer"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Customer"}
             </Button>
           </div>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

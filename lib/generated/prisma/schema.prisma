@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Provider {
+  Email
+  Google
+}
+
+model Admin {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  firstName String?
+  lastName  String?
+  phone     String?
+  bio       String?
+  Customer  Customer[]
+  provider  Provider   @default(Google)
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  InvoiceLogs InvoiceLogs[]
+}
+
+model Customer {
+  id                 String    @id @default(uuid())
+  fullName           String?
+  email              String    @unique
+  phone              String?
+  status             Boolean   @default(true)
+  externalCustomerId Int       @unique @default(autoincrement())
+  address            String?
+  admin              Admin     @relation(fields: [adminId], references: [id])
+  adminId            String
+  Invoice            Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum InvoiceStatus {
+  Paid
+  Pending
+  Overdue
+}
+
+model Invoice {
+  id                String        @id @default(uuid())
+  amount            Float         @default(0.0)
+  status            InvoiceStatus @default(Pending)
+  dueDate           DateTime      @default(now())
+  externalInvoiceId Int           @unique @default(autoincrement())
+  description       String?
+  owner             Customer      @relation(fields: [ownerId], references: [id])
+  ownerId           String
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  InvoiceLogs InvoiceLogs[]
+}
+
+enum InvoiceAction {
+  Update
+  Delete
+}
+
+model InvoiceLogs {
+  id           String        @id @default(uuid())
+  admin        Admin         @relation(fields: [adminId], references: [id])
+  adminId      String
+  invoice      Invoice       @relation(fields: [invoiceId], references: [id])
+  invoiceId    String
+  action       InvoiceAction
+  fieldChanged Json?
+  changedAt    DateTime      @default(now())
+}
