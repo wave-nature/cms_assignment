@@ -36,6 +36,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DeleteDialog } from "@/components/ui/delete-dialog";
+import toast from "react-hot-toast";
 
 type Customer = {
   id: string;
@@ -57,7 +58,7 @@ export function CustomerList() {
   const [loading, setLoading] = useState<boolean>(false);
 
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
+  const [pageSize] = useState<number>(10);
   const [totalCustomers, setTotalCustomers] = useState<number>(0);
   const [emailSearch, setEmailSearch] = useState<string>("");
 
@@ -236,12 +237,29 @@ export function CustomerList() {
               open={open}
               setOpen={setOpen}
               text="This action can't be undone. Are you sure you want to delete this customer and his/her invoices too?"
-              onConfirm={() => {
+              onConfirm={async () => {
+                const toastId = toast.loading("Deleting customer...");
                 try {
-                } catch (error) {}
+                  const res = await axios.delete(
+                    `/api/admin/customers/${customer.id}`
+                  );
+
+                  if (res.status === 200) {
+                    toast.dismiss(toastId);
+                    toast.success("Customer deleted successfully!");
+                    setPage(1);
+                  }
+                } catch (error) {
+                  toast.dismiss(toastId);
+                  toast.error(
+                    "Error while deleting customer, please try again later."
+                  );
+                } finally {
+                  toast.dismiss(toastId);
+                  setOpen(false);
+                }
               }}
             />
-            ;
           </>
         );
       },

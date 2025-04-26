@@ -1,63 +1,95 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Edit } from "lucide-react"
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Edit } from "lucide-react";
+import axios from "axios";
+import { toast } from "sonner"; // or wherever your toast comes from
+import { useRouter } from "next/navigation";
 
 interface EditCustomerDialogProps {
   customer: {
-    id: string
-    name: string
-    email: string
-    phone: string
-    address: string
-    status: string
-    externalId: string
-  }
+    id: string;
+    fullName: string;
+    email: string;
+    phone: string;
+    address: string;
+    status: string;
+  };
+  refresh: boolean;
+  setRefresh: (prev: boolean) => void;
 }
 
-export function EditCustomerDialog({ customer }: EditCustomerDialogProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [open, setOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    name: customer.name,
-    email: customer.email,
-    phone: customer.phone,
-    address: customer.address,
-    status: customer.status,
-    externalId: customer.externalId,
-  })
+export function EditCustomerDialog({
+  customer,
+  refresh,
+  setRefresh,
+}: EditCustomerDialogProps) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    reset,
+    formState: { isSubmitting },
+  } = useForm({
+    defaultValues: {
+      fullName: customer.fullName,
+      email: customer.email,
+      phone: customer.phone,
+      address: customer.address,
+      status: customer.status,
+    },
+  });
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+  const onSubmit = async (data: any) => {
+    const toastId = toast.loading("Saving customer...");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    // In a real implementation, you would call your API here
-    setTimeout(() => {
-      setIsLoading(false)
-      setOpen(false)
-      // You would typically refresh the data here
-    }, 1000)
-  }
+    try {
+      await axios.patch(`/api/admin/customers/${customer.id}`, data);
+      toast.success("Customer saved successfully");
+      setOpen(false);
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to save customer";
+      toast.error(message);
+    } finally {
+      toast.dismiss(toastId);
+      setRefresh(!refresh);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        setOpen(isOpen);
+        if (!isOpen) reset(); // Reset form when dialog is closed
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="icon">
           <Edit className="h-4 w-4" />
@@ -68,45 +100,39 @@ export function EditCustomerDialog({ customer }: EditCustomerDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit Customer</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                name="name"
+                {...register("fullName", { required: true })}
                 placeholder="Acme Inc."
-                value={formData.name}
-                onChange={handleChange}
-                required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
-                name="email"
                 type="email"
+                {...register("email", { required: true })}
                 placeholder="info@acme.com"
-                value={formData.email}
-                onChange={handleChange}
-                required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
-                name="phone"
+                {...register("phone", { required: true })}
                 placeholder="(555) 123-4567"
-                value={formData.phone}
-                onChange={handleChange}
-                required
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
-              <Select value={formData.status} onValueChange={(value) => handleSelectChange("status", value)}>
+              <Select
+                value={watch("status")}
+                onValueChange={(value) => setValue("status", value)}
+              >
                 <SelectTrigger id="status">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
@@ -116,39 +142,29 @@ export function EditCustomerDialog({ customer }: EditCustomerDialogProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="externalId">External ID</Label>
-              <Input
-                id="externalId"
-                name="externalId"
-                placeholder="EXT-001"
-                value={formData.externalId}
-                onChange={handleChange}
-              />
-              <p className="text-xs text-muted-foreground">Identifier for customers from external systems</p>
-            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
             <Textarea
               id="address"
-              name="address"
+              {...register("address", { required: true })}
               placeholder="123 Main St, Anytown, USA"
-              value={formData.address}
-              onChange={handleChange}
-              required
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Changes"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

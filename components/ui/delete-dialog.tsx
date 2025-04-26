@@ -15,7 +15,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 
 interface DeleteDialogProps {
   text: string;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void>;
   open: boolean;
   setOpen: (open: boolean) => void;
 }
@@ -40,9 +40,9 @@ export function DeleteDialog({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                onConfirm();
-                setOpen(false);
+              onClick={async () => {
+                await onConfirm();
+                setTimeout(() => setOpen(false), 10);
               }}
             >
               Confirm

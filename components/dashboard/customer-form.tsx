@@ -16,6 +16,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "react-hot-toast";
 import axios from "axios";
+import { useEffect, useState } from "react";
+import PageLoader from "../ui/page-loader";
 
 type FormData = {
   fullName?: string;
@@ -25,7 +27,8 @@ type FormData = {
   status?: boolean;
 };
 
-export function CustomerForm() {
+export function CustomerForm({ id }: { id?: string }) {
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const {
     register,
@@ -45,11 +48,37 @@ export function CustomerForm() {
 
   const formData = watch();
 
+  const fetchCustomer = async (id: string) => {
+    try {
+      setLoading(true);
+      const res = await axios.get(`/api/admin/customers/${id}`);
+
+      const customer = res.data?.payload?.customer;
+      if (customer) {
+        setValue("fullName", customer.fullName);
+        setValue("email", customer.email);
+        setValue("phone", customer.phone);
+        setValue("address", customer.address);
+        setValue("status", customer.status);
+      }
+    } catch (error) {
+      console.error("Failed to fetch customers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!id) return;
+    fetchCustomer(id);
+  }, []);
+
   const onSubmit = async (data: FormData) => {
     const toastId = toast.loading("Saving customer...");
 
     try {
-      await axios.post("/api/admin/customers", data);
+      if (!id) await axios.post("/api/admin/customers", data);
+      else await axios.patch(`/api/admin/customers/${id}`, data);
 
       toast.success("Customer saved successfully");
       router.push("/dashboard/customers");
@@ -63,6 +92,8 @@ export function CustomerForm() {
       toast.dismiss(toastId);
     }
   };
+
+  if (loading) return <PageLoader />;
 
   return (
     <Card>
@@ -132,7 +163,13 @@ export function CustomerForm() {
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save Customer"}
+              {isSubmitting
+                ? id
+                  ? "Updating..."
+                  : "Saving..."
+                : id
+                ? "Update Customer"
+                : "Save Customer"}
             </Button>
           </div>
         </form>
