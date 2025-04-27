@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Spinner } from "../ui/spinner";
 import toast from "react-hot-toast";
+import { format } from "date-fns";
 
 interface CustomerDetailsProps {
   id: string;
@@ -83,15 +84,21 @@ export function CustomerDetails({ id }: CustomerDetailsProps) {
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-1">
             <h3 className="text-sm font-medium leading-none">Email</h3>
-            <p className="text-sm text-muted-foreground">{customer.email}</p>
+            <p className="text-sm text-muted-foreground">
+              {customer.email || "N/A"}
+            </p>
           </div>
           <div className="space-y-1">
             <h3 className="text-sm font-medium leading-none">Phone</h3>
-            <p className="text-sm text-muted-foreground">{customer.phone}</p>
+            <p className="text-sm text-muted-foreground">
+              {customer.phone || "N/A"}
+            </p>
           </div>
           <div className="space-y-1">
             <h3 className="text-sm font-medium leading-none">Address</h3>
-            <p className="text-sm text-muted-foreground">{customer.address}</p>
+            <p className="text-sm text-muted-foreground">
+              {customer.address || "N/A"}
+            </p>
           </div>
           <div className="space-y-1">
             <h3 className="text-sm font-medium leading-none">Status</h3>
@@ -112,7 +119,7 @@ export function CustomerDetails({ id }: CustomerDetailsProps) {
           <div className="space-y-1">
             <h3 className="text-sm font-medium leading-none">Created</h3>
             <p className="text-sm text-muted-foreground">
-              {customer.createdAt}
+              {customer.createdAt ? format(customer.createdAt, "PPP") : "N/A"}
             </p>
           </div>
         </div>

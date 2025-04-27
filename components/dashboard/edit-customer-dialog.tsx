@@ -28,10 +28,10 @@ import { useRouter } from "next/navigation";
 interface EditCustomerDialogProps {
   customer: {
     id: string;
-    fullName: string;
+    fullName?: string;
     email: string;
-    phone: string;
-    address: string;
+    phone?: string;
+    address?: string;
     status: string;
   };
   refresh: boolean;
@@ -55,20 +55,23 @@ export function EditCustomerDialog({
     formState: { isSubmitting },
   } = useForm({
     defaultValues: {
-      fullName: customer.fullName,
+      fullName: customer.fullName || "",
       email: customer.email,
-      phone: customer.phone,
-      address: customer.address,
-      status: customer.status,
+      phone: customer.phone || "",
+      address: customer.address || "",
+      status: customer.status ? "active" : "inactive",
     },
   });
 
   const onSubmit = async (data: any) => {
-    const toastId = toast.loading("Saving customer...");
+    const toastId = toast.loading("Updating customer...");
 
     try {
-      await axios.patch(`/api/admin/customers/${customer.id}`, data);
-      toast.success("Customer saved successfully");
+      await axios.patch(`/api/admin/customers/${customer.id}`, {
+        ...data,
+        status: data.status === "active",
+      });
+      toast.success("Customer updated successfully");
       setOpen(false);
     } catch (error: any) {
       const message =
@@ -106,7 +109,7 @@ export function EditCustomerDialog({
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                {...register("fullName", { required: true })}
+                {...register("fullName")}
                 placeholder="Acme Inc."
               />
             </div>
@@ -123,7 +126,7 @@ export function EditCustomerDialog({
               <Label htmlFor="phone">Phone</Label>
               <Input
                 id="phone"
-                {...register("phone", { required: true })}
+                {...register("phone")}
                 placeholder="(555) 123-4567"
               />
             </div>
@@ -147,7 +150,7 @@ export function EditCustomerDialog({
             <Label htmlFor="address">Address</Label>
             <Textarea
               id="address"
-              {...register("address", { required: true })}
+              {...register("address")}
               placeholder="123 Main St, Anytown, USA"
             />
           </div>

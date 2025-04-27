@@ -19,15 +19,25 @@ export const isAdmin = async (request: NextRequest) => {
     return null;
   }
   // is admin
-  const admin = await prisma.admin.findFirst({
-    where: {
-      id: token?.sub,
-    },
-  });
+  let admin = null;
+
+  if (token?.email) {
+    admin = await prisma.admin.findFirst({
+      where: {
+        email: token?.email,
+      },
+    });
+  } else {
+    admin = await prisma.admin.findFirst({
+      where: {
+        id: token?.sub,
+      },
+    });
+  }
+
   if (!admin) {
     return null;
   }
-
 
   return admin;
 };

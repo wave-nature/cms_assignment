@@ -31,7 +31,7 @@ import axios from "axios";
 
 const formSchema = z.object({
   amount: z.string().min(1, "Amount is required"),
-  status: z.enum(["Paid", "Pending", "Overdue"]),
+  status: z.enum(["Paid", "Pending", "Overdue","PastDue"]),
   description: z.string().optional(),
   date: z.date(),
   dueDate: z.date(),
@@ -140,6 +140,7 @@ export function InvoiceForm({ customerId }: InvoiceFormProps) {
                   <SelectItem value="Paid">Paid</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
                   <SelectItem value="Overdue">Overdue</SelectItem>
+                  <SelectItem value="PastDue">PastDue</SelectItem>
                 </SelectContent>
               </Select>
               {errors.status && (

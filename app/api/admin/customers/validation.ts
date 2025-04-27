@@ -7,10 +7,10 @@ const get = Joi.object({
 });
 
 const post = Joi.object({
-  fullName: Joi.string().optional(),
+  fullName: Joi.string().optional().allow(null, ""),
   email: Joi.string().email().required(),
-  phone: Joi.string().optional().default(""),
-  address: Joi.string().optional(),
+  phone: Joi.string().optional().default("").allow(null, ""),
+  address: Joi.string().optional().allow(null, ""),
   status: Joi.boolean().optional().default(true),
 });
 

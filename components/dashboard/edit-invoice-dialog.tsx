@@ -175,6 +175,7 @@ export function EditInvoiceDialog({
                   <SelectItem value="Paid">Paid</SelectItem>
                   <SelectItem value="Pending">Pending</SelectItem>
                   <SelectItem value="Overdue">Overdue</SelectItem>
+                  <SelectItem value="PastDue">Pastdue</SelectItem>
                 </SelectContent>
               </Select>
             </div>

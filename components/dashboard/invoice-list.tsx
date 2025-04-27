@@ -43,7 +43,7 @@ type Invoice = {
   customerId: string;
   customerName: string;
   amount: number;
-  status: "Paid" | "Pending" | "Overdue";
+  status: "Paid" | "Pending" | "Overdue" | "PastDue";
   invoiceDate: string;
   dueDate: string;
   externalInvoiceId: string;

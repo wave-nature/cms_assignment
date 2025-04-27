@@ -10,11 +10,16 @@ const get = Joi.object({
 const post = Joi.object({
   amount: Joi.number().required(),
   status: Joi.string()
-    .valid(InvoiceStatus.Pending, InvoiceStatus.Overdue, InvoiceStatus.Paid)
+    .valid(
+      InvoiceStatus.Pending,
+      InvoiceStatus.Overdue,
+      InvoiceStatus.Paid,
+      InvoiceStatus.PastDue
+    )
     .required(),
   dueDate: Joi.date().required(),
   invoiceDate: Joi.date().required(),
-  description: Joi.string().optional(),
+  description: Joi.string().optional().allow(null, ""),
   ownerId: Joi.string().required(),
 });
 

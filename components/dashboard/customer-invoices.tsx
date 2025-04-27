@@ -40,7 +40,7 @@ import axios from "axios";
 type Invoice = {
   id: string;
   amount: number;
-  status: "Paid" | "Pending" | "Overdue";
+  status: "Paid" | "Pending" | "Overdue" | "PastDue";
   dueDate: string;
   invoiceDate: string;
   externalInvoiceId: string;
