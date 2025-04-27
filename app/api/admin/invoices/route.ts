@@ -1,12 +1,18 @@
 import prisma from "@prisma/index";
 import { NextRequest } from "next/server";
 
-import { convertURLSearchParamsToObject } from "@/utils/helpers";
+import { convertURLSearchParamsToObject, isAdmin } from "@/utils/helpers";
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
 import validation from "./validation";
 
 export const GET = async (request: NextRequest) => {
+  const admin = await isAdmin(request);
+  if (!admin) {
+    createError({
+      message: messages.UNAUTHORIZED,
+    });
+  }
   // Validate
   const searchParams = request.nextUrl.searchParams;
   const { error, value } = validation.get.validate(

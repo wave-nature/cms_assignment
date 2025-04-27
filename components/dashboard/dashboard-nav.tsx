@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { BarChart3, CreditCard, Home, Settings, Users } from "lucide-react";
+import { BarChart3, CreditCard, Home, DockIcon, Users } from "lucide-react";
 
 interface DashboardNavProps {
   className?: string;
@@ -29,11 +29,10 @@ export function DashboardNav({ className }: DashboardNavProps) {
       href: "/dashboard/invoices",
       icon: CreditCard,
     },
-    
     {
-      title: "Settings",
-      href: "/dashboard/settings",
-      icon: Settings,
+      title: "Docs & API",
+      href: "/docs",
+      icon: DockIcon,
     },
   ];
 

@@ -56,6 +56,7 @@ enum InvoiceStatus {
   Paid
   Pending
   Overdue
+  PastDue
 }
 
 model Invoice {

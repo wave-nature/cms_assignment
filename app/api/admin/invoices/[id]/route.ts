@@ -5,15 +5,15 @@ import { getToken } from "next-auth/jwt";
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
 import validation from "./validation";
+import { isAdmin } from "@/utils/helpers";
 
 export const GET = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const token = await getToken({ req: request });
-
-  if (!token) {
-    return createError({
+  const admin = await isAdmin(request);
+  if (!admin) {
+    createError({
       message: messages.UNAUTHORIZED,
     });
   }
@@ -43,10 +43,9 @@ export const PATCH = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const token = await getToken({ req: request });
-
-  if (!token?.sub) {
-    return createError({
+  const admin: any = await isAdmin(request);
+  if (!admin) {
+    createError({
       message: messages.UNAUTHORIZED,
     });
   }
@@ -97,13 +96,11 @@ export const PATCH = async (
       data: {
         invoiceId: id,
         fieldChanged: fieldChanged,
-        adminId: token?.sub,
+        adminId: admin?.id,
         changedAt: new Date(),
         action: "Update",
       },
     });
-
-    console.log("log", log);
   }
 
   return createResponse({

@@ -58,7 +58,6 @@ export function RegisterForm() {
         toast.success("Account created successfully, Logging in...");
       } catch (error: any) {
         toast.dismiss();
-        console.log("Signup Failed:", error);
         toast.error(error?.response?.data?.message || "Signup Failed");
       } finally {
         setIsLoading(false);

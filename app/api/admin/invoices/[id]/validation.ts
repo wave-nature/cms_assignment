@@ -8,7 +8,7 @@ const patch = Joi.object({
     .optional(),
   dueDate: Joi.date().optional(),
   invoiceDate: Joi.date().optional(),
-  description: Joi.string().optional(),
+  description: Joi.string().optional().allow(null, ""),
   fieldChanged: Joi.object().optional(),
 });
 export default { patch };

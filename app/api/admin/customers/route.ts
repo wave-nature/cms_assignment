@@ -2,16 +2,15 @@ import prisma from "@prisma/index";
 import { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-import { convertURLSearchParamsToObject } from "@/utils/helpers";
+import { convertURLSearchParamsToObject, isAdmin } from "@/utils/helpers";
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
 import validation from "./validation";
 
 export const GET = async (request: NextRequest) => {
-  const token = await getToken({ req: request });
-
-  if (!token) {
-    return createError({
+  const admin = await isAdmin(request);
+  if (!admin) {
+    createError({
       message: messages.UNAUTHORIZED,
     });
   }
@@ -27,7 +26,7 @@ export const GET = async (request: NextRequest) => {
       payload: error.details,
     });
   }
-  const { page, pageSize, search } = value;
+  const { page, pageSize, email } = value;
 
   // Get all customers
   const customers = await prisma.customer.findMany({
@@ -35,7 +34,7 @@ export const GET = async (request: NextRequest) => {
     take: pageSize,
     where: {
       email: {
-        contains: search,
+        contains: email,
         mode: "insensitive",
       },
     },
@@ -51,7 +50,7 @@ export const GET = async (request: NextRequest) => {
   const totalCustomers = await prisma.customer.count({
     where: {
       email: {
-        contains: search,
+        contains: email,
         mode: "insensitive",
       },
     },
@@ -71,7 +70,14 @@ export const GET = async (request: NextRequest) => {
 };
 
 export const POST = async (request: NextRequest) => {
-  const token = await getToken({ req: request });
+  const admin: any = await isAdmin(request);
+
+  if (!admin) {
+    return createError({
+      message: messages.UNAUTHORIZED,
+    });
+  }
+
   // Validate the request body against the schema
   const { error, value } = validation.post.validate(await request.json());
   if (error) {
@@ -102,7 +108,7 @@ export const POST = async (request: NextRequest) => {
       phone,
       status,
       address,
-      adminId: token?.sub,
+      adminId: admin?.id,
     },
   };
 

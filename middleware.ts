@@ -11,6 +11,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/api/admin/customers/:path*",
-    "/api/admin/invoice/:path*",
-  ], // protect dashboard routes
+    "/api/admin/invoices/:path*",
+    "/api/admin/dashboard",
+  ], // protect dashboard and api routes
 };

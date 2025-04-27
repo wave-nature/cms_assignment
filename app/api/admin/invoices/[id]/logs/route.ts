@@ -1,7 +1,7 @@
 import prisma from "@prisma/index";
 import { NextRequest } from "next/server";
 
-import { convertURLSearchParamsToObject } from "@/utils/helpers";
+import { convertURLSearchParamsToObject, isAdmin } from "@/utils/helpers";
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
 import validation from "./validation";
@@ -10,6 +10,13 @@ export const GET = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  const admin = await isAdmin(request);
+  if (!admin) {
+    createError({
+      message: messages.UNAUTHORIZED,
+    });
+  }
+
   const invoiceId = (await params).id;
   // Validate
   const searchParams = request.nextUrl.searchParams;

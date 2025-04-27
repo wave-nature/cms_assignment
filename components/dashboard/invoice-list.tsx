@@ -36,6 +36,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import axios from "axios";
+import PageLoader from "../ui/page-loader";
 
 type Invoice = {
   id: string;
@@ -48,6 +49,7 @@ type Invoice = {
   externalInvoiceId: string;
   owner: {
     id: string;
+    externalCustomerId: string;
     fullName: string;
   };
 };
@@ -57,10 +59,10 @@ export function InvoiceList() {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [data, setData] = useState<Invoice[]>([]);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [totalInvoices, setTotalInvoices] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  const pageSize = 10;
   // Fetch invoices data from API
   async function fetchInvoices() {
     setLoading(true);
@@ -137,6 +139,23 @@ export function InvoiceList() {
       ),
     },
     {
+      accessorKey: "externalCustomerId",
+      header: ({ column }) => {
+        return <Button variant="ghost">Customer Id</Button>;
+      },
+      cell: ({ row }) => {
+        const externalCustomerId: any = row.original.owner.externalCustomerId;
+        return (
+          <div>
+            {"CID_" +
+              (parseInt(externalCustomerId) < 10
+                ? "0" + externalCustomerId
+                : externalCustomerId)}
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "amount",
       header: ({ column }) => {
         return (
@@ -166,9 +185,9 @@ export function InvoiceList() {
         return (
           <Badge
             variant={
-              status === "paid"
+              status === "Paid"
                 ? "default"
-                : status === "pending"
+                : status === "Pending"
                 ? "secondary"
                 : "destructive"
             }
@@ -296,12 +315,14 @@ export function InvoiceList() {
     },
   });
 
+  if (loading) return <PageLoader />;
+
   return (
     <Card>
       <CardContent className="pt-6">
         <div className="flex items-center py-4">
           <Input
-            placeholder="Filter invoices..."
+            placeholder="Filter by invoice ID..."
             value={(table.getColumn("id")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
               table.getColumn("id")?.setFilterValue(event.target.value)

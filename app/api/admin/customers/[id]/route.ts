@@ -2,19 +2,18 @@ import prisma from "@prisma/index";
 import { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-import { convertURLSearchParamsToObject } from "@/utils/helpers";
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
 import validation from "./validation";
+import { isAdmin } from "@/utils/helpers";
 
 export const GET = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const token = await getToken({ req: request });
-
-  if (!token) {
-    return createError({
+  const admin = await isAdmin(request);
+  if (!admin) {
+    createError({
       message: messages.UNAUTHORIZED,
     });
   }
@@ -41,9 +40,15 @@ export const GET = async (
 };
 
 export const PATCH = async (
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
+  const admin = await isAdmin(request);
+  if (!admin) {
+    createError({
+      message: messages.UNAUTHORIZED,
+    });
+  }
   // Validate the request body against the schema
   const { error, value } = validation.patch.validate(await request.json());
   if (error) {
@@ -93,14 +98,14 @@ export const DELETE = async (
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
-  const token = await getToken({ req: request });
-  const id = (await params).id;
-
-  if (!token) {
-    return createError({
+  const admin = await isAdmin(request);
+  if (!admin) {
+    createError({
       message: messages.UNAUTHORIZED,
     });
   }
+
+  const id = (await params).id;
 
   // Get all customer
   const customer = await prisma.customer.findFirst({

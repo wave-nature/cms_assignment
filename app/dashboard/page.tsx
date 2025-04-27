@@ -24,19 +24,18 @@ export default function DashboardPage() {
   }, []);
   if (loading) return <PageLoader />;
 
-  console.log("Dashboard Data: ", data);
-
   return (
     <div className="space-y-6">
       <DashboardHeader
         heading="Dashboard"
         text="Overview of your business metrics and activity"
       />
-      <div className="grid gap-12 md:grid-cols-3 lg:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
         <DashboardCards
           invoices={data?.invoices}
           customers={data?.customers}
           revenue={data?.totalRevenue}
+          overdueInvoices={data?.overdueInvoices}
         />
       </div>
       {data ? (

@@ -37,7 +37,6 @@ export function LoginForm() {
         password,
         redirect: false,
       });
-      console.log("response", response);
       if (response.ok && !response?.error) {
         toast.dismiss(toastId);
         toast.success("Loggedin successfully");
@@ -48,7 +47,6 @@ export function LoginForm() {
       }
     } catch (error: any) {
       toast.dismiss(toastId);
-      console.log("Login Failed:", error);
       toast.error(error?.response?.data?.message || "Login Failed");
     } finally {
       setIsLoading(false);

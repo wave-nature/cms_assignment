@@ -49,7 +49,8 @@ export type Provider = (typeof Provider)[keyof typeof Provider]
 export const InvoiceStatus: {
   Paid: 'Paid',
   Pending: 'Pending',
-  Overdue: 'Overdue'
+  Overdue: 'Overdue',
+  PastDue: 'PastDue'
 };
 
 export type InvoiceStatus = (typeof InvoiceStatus)[keyof typeof InvoiceStatus]

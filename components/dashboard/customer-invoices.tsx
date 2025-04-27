@@ -141,9 +141,9 @@ export function CustomerInvoices({ customerId }: CustomerInvoicesProps) {
         return (
           <Badge
             variant={
-              status === "paid"
+              status === "Paid"
                 ? "default"
-                : status === "pending"
+                : status === "Pending"
                 ? "secondary"
                 : "destructive"
             }

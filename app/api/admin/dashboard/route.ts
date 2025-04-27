@@ -3,9 +3,17 @@ import { NextRequest } from "next/server";
 
 import { createError, createResponse } from "@/utils/responseutils";
 import messages from "@/utils/messages";
+import { isAdmin } from "@/utils/helpers";
 
 export const GET = async (request: NextRequest) => {
   try {
+    const admin = await isAdmin(request);
+    if (!admin) {
+      createError({
+        message: messages.UNAUTHORIZED,
+      });
+    }
+
     const [
       totalCustomers,
       totalInvoices,
