@@ -1,0 +1,10 @@
+// this must be a json file to run a cronjob, my current plan (free) of vercel is not allowing me to set more than one cron job
+
+{
+  "crons": [
+    {
+      "path": "/api/cron/invoice",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
